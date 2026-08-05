@@ -136,5 +136,48 @@
 </footer>
 
 </div>
+
+<!--
+  計測（Cookie なし・IP を保存しない・個人識別子なし）
+  受け口は Cloudflare Workers + D1。実装は hummer98/rx-pipeline-puzzle の tools/collector/。
+  測るのは「来訪」と「問い合わせクリック」の2つだけ。
+-->
+<script>
+(function () {
+  if (navigator.doNotTrack === "1" || navigator.globalPrivacyControl) return;
+  if (/^(localhost|127\.|\[?::1)/.test(location.hostname) || location.protocol === "file:") return;
+
+  function send(name, path) {
+    try {
+      fetch("https://t.hummer98.dev/e", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          name: name,
+          path: path,
+          site: "site",
+          ref: document.referrer || "",
+          lang: "ja"
+        })
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  send("pageview", location.pathname);
+
+  // mailto: のクリック＝問い合わせ着手。ここが実質のコンバージョン。
+  document.addEventListener("click", function (ev) {
+    var el = ev.target;
+    while (el && el !== document.body) {
+      if (el.tagName === "A" && (el.getAttribute("href") || "").indexOf("mailto:") === 0) {
+        send("contact", "/e/contact");
+        return;
+      }
+      el = el.parentNode;
+    }
+  }, true);
+})();
+</script>
 </body>
 </html>
