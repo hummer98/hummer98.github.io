@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hummer98.dev/sitemap.xml
